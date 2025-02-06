@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install the correct version of PyTorch (CPU-only), Torchvision, Torchaudio, and IPEX 2.5
 RUN pip install --upgrade pip && \
-    pip install --no-cache-dir torch==2.5.0 torchvision==0.18.0 torchaudio==2.5.0 --index-url https://download.pytorch.org/whl/cpu && \
+    pip install --no-cache-dir torch==2.5.0 torchvision==0.20.0 torchaudio==2.5.0 --index-url https://download.pytorch.org/whl/cpu && \
     pip install --no-cache-dir intel_extension_for_pytorch==2.5.0 transformers==4.45.1 gradio accelerate 
 
 # Clone and install BitsAndBytes from source (CPU mode)
