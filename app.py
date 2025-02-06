@@ -3,7 +3,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 
 # Load TinyLlama model and tokenizer
-MODEL_ID = "TinyLlama/TinyLlama-1.1B"
+MODEL_ID = "TinyLlama/TinyLlama_v1.1"
 tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
 model = AutoModelForCausalLM.from_pretrained(MODEL_ID)
 
