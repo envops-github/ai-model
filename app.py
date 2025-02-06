@@ -43,6 +43,7 @@ try:
     model = AutoModelForCausalLM.from_pretrained(
         MODEL_ID,
         quantization_config=quantization_config,
+        torch_dtype=torch.float16,
         device_map={"": device}
     )
 
