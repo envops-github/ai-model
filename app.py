@@ -4,6 +4,8 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 import torch
 import sys
 import logging
+import time
+import traceback
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -50,4 +52,40 @@ try:
     logging.info(f"✅ Successfully loaded model on {device}: {MODEL_ID}")
 except Exception as e:
     logging.error(f"🔥 Failed to load model: {e}")
+    sys.exit(1)
+
+# Define text generation function
+def generate_text(prompt):
+    logging.info(f"📝 Received prompt: {prompt}")
+    try:
+        inputs = tokenizer(prompt, return_tensors="pt").to(device)
+        outputs = model.generate(**inputs, max_length=100)
+        response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+        logging.info(f"🤖 AI Response: {response}")
+        return response
+    except Exception as e:
+        logging.error(f"❌ Error in text generation: {e}")
+        return "Error processing your request."
+
+# Gradio UI
+ui = gr.Interface(
+    fn=generate_text,
+    inputs=gr.Textbox(placeholder="Type your message...", lines=2, label="💬 Enter your prompt"),
+    outputs=gr.Textbox(label="🤖 TinyLlama Response"),
+    title="🌌 TinyLlama AI Chatbot",
+    description="🔵 A lightweight AI chatbot powered by TinyLlama_v1.1.",
+)
+
+# Start Gradio UI and prevent the container from exiting
+try:
+    if __name__ == "__main__":
+        logging.info("🚀 Starting UI on port 7860...")
+        ui.launch(server_name="0.0.0.0", server_port=7860)
+
+        # Keep the process alive even if UI crashes
+        while True:
+            time.sleep(60)
+except Exception as e:
+    logging.error(f"❌ Unhandled exception: {e}")
+    logging.error(traceback.format_exc())
     sys.exit(1)
