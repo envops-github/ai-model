@@ -1,13 +1,17 @@
-FROM python:3.10-slim
+FROM python:3.10-alpine as builder
 
-RUN apt-get update && apt-get install -y \
-    git wget curl && \
-    rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache git wget curl
 
 RUN pip install --upgrade pip && \
-    pip install torch transformers gradio
+    pip install --no-cache-dir torch==2.0.1+cpu transformers gradio
+
+FROM python:3.10-alpine
 
 WORKDIR /app
+
+COPY --from=builder /root/.local /root/.local
+
+ENV PATH="/root/.local/bin:$PATH"
 
 COPY app.py /app/app.py
 
