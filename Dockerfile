@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Install PyTorch (CPU-only), Transformers, and Gradio
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu && \
-    pip install --no-cache-dir transformers gradio
+    pip install --no-cache-dir transformers gradio accelerate
 
 # Set working directory
 WORKDIR /app
