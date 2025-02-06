@@ -20,6 +20,7 @@ set_verbosity_info()
 # Force BitsAndBytes to use CPU
 os.environ["BITSANDBYTES_NOWELCOME"] = "1"
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "cpu_max_split_size_mb:512"
 
 # Check if bitsandbytes is available
 try:
@@ -29,8 +30,8 @@ except ImportError:
     logging.error("❌ bitsandbytes is missing! Install it using `pip install -U bitsandbytes`.")
     sys.exit(1)
 
-# Load model with 8-bit quantization on CPU
-device = "cpu"
+# Force CPU usage
+device = torch.device("cpu")
 
 try:
     logging.info("⏳ Loading tokenizer...")
