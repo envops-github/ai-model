@@ -3,7 +3,6 @@ import gradio as gr
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 import torch
 import logging
-import time
 import traceback
 from huggingface_hub import login
 
@@ -25,11 +24,17 @@ if not HF_TOKEN:
 logging.info("🔑 Logging into Hugging Face...")
 login(HF_TOKEN)
 
-# ✅ Принудительно отключаем CUDA для BitsAndBytes
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
-os.environ["BITSANDBYTES_NOWELCOME"] = "1"
-os.environ["BITSANDBYTES_FORCE_CPU"] = "1"  # ⚡ ВАЖНО: Принудительно используем CPU
-device = torch.device("cpu")
+# ✅ Проверяем доступность CUDA
+if torch.cuda.is_available():
+    device = "cuda"
+    logging.info("✅ Using CUDA for inference!")
+else:
+    logging.error("❌ No CUDA available! Please check GPU drivers.")
+    exit(1)
+
+# ✅ Освобождаем VRAM перед загрузкой
+torch.cuda.empty_cache()
+torch.cuda.ipc_collect()
 
 # ✅ Загрузка токенизатора
 try:
@@ -39,12 +44,12 @@ except Exception as e:
     logging.error(f"🔥 Failed to load tokenizer: {e}")
     exit(1)
 
-# ✅ Загрузка модели с 4-битной квантованием
+# ✅ Загрузка модели с 4-битным квантованием
 try:
-    logging.info("⏳ Loading model with 4-bit quantization on CPU...")
+    logging.info("⏳ Loading model with 4-bit quantization on GPU...")
 
     quantization_config = BitsAndBytesConfig(
-        load_in_4bit=True,
+        load_in_4bit=True,  # ⚡ 4-битное квантование (экономия VRAM)
         bnb_4bit_compute_dtype=torch.float16,
         bnb_4bit_use_double_quant=True,
     )
@@ -52,8 +57,10 @@ try:
     model = AutoModelForCausalLM.from_pretrained(
         MODEL_ID,
         quantization_config=quantization_config,
-        device_map={"": device},
-        token=HF_TOKEN  # ⚠️ `use_auth_token` заменен на `token`
+        device_map="auto",
+        torch_dtype=torch.float16,  # ⚡ Экономия VRAM
+        low_cpu_mem_usage=True,  # ⚡ Экономия памяти при загрузке
+        token=HF_TOKEN
     )
 
     logging.info(f"✅ Successfully loaded model on {device}: {MODEL_ID}")
@@ -93,17 +100,14 @@ ui = gr.Interface(
     inputs=gr.Textbox(placeholder="Type your message...", lines=2, label="💬 Enter your prompt"),
     outputs=gr.Textbox(label="🤖 Llama 2 Response"),
     title="🌌 Llama 2 AI Chatbot",
-    description="🚀 A chatbot powered by Llama 2 (7B) with 4-bit quantization.",
+    description="🚀 A chatbot powered by Llama 2 (7B) with 4-bit quantization on GPU.",
 )
 
-# ✅ Запуск Gradio UI и поддержка активности контейнера
+# ✅ Запуск Gradio UI
 try:
     if __name__ == "__main__":
         logging.info("🚀 Starting UI on port 7860...")
         ui.launch(server_name="0.0.0.0", server_port=7860)
-
-        while True:
-            time.sleep(60)
 except Exception as e:
     logging.error(f"❌ Unhandled exception: {e}")
     logging.error(traceback.format_exc())
