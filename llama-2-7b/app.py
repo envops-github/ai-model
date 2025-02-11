@@ -25,14 +25,16 @@ if not HF_TOKEN:
 logging.info("🔑 Logging into Hugging Face...")
 login(HF_TOKEN)
 
-# ✅ Принудительное использование CPU
+# ✅ Принудительно отключаем CUDA для BitsAndBytes
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
+os.environ["BITSANDBYTES_NOWELCOME"] = "1"
+os.environ["BITSANDBYTES_FORCE_CPU"] = "1"  # ⚡ ВАЖНО: Принудительно используем CPU
 device = torch.device("cpu")
 
 # ✅ Загрузка токенизатора
 try:
     logging.info("⏳ Loading tokenizer...")
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, use_auth_token=HF_TOKEN)
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, token=HF_TOKEN)
 except Exception as e:
     logging.error(f"🔥 Failed to load tokenizer: {e}")
     exit(1)
@@ -51,7 +53,7 @@ try:
         MODEL_ID,
         quantization_config=quantization_config,
         device_map={"": device},
-        use_auth_token=HF_TOKEN  # Передаем токен для доступа к закрытой модели
+        token=HF_TOKEN  # ⚠️ `use_auth_token` заменен на `token`
     )
 
     logging.info(f"✅ Successfully loaded model on {device}: {MODEL_ID}")
