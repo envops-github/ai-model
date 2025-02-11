@@ -72,6 +72,7 @@ jobs:
           context: llama-2-7b
           push: true
           tags: ${{ needs.prepair.outputs.image_name }}
+          build-args: HUGGINGFACE_TOKEN=${{ secrets.HUGGINGFACE_TOKEN }}
 
   deploy-to-k8s:
     needs: [prepair, build-and-push-image]
