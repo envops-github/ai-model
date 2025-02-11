@@ -1,9 +1,10 @@
-name: Build and Deploy Tiny Llama to k8s
+name: Build and Deploy Llama-2-7b to k8s
 
 on:
   workflow_dispatch:
   push:
     branches: ['main', 'master', 'staging']
+    paths: llama-2-7b
 
 concurrency: 
   group: ${{ github.workflow }}-${{ github.ref }}
