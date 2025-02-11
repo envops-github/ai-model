@@ -71,8 +71,6 @@ jobs:
         with:
           context: llama-2-7b
           push: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
           tags: ${{ needs.prepair.outputs.image_name }}
 
   deploy-to-k8s:
