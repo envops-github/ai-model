@@ -5,23 +5,39 @@ import torch
 import logging
 import time
 import traceback
+from huggingface_hub import login
 
-# Configure logging
+# ✅ Настройка логирования
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logging.info("🚀 Starting Llama 2 AI application...")
 
-# Model selection
+# ✅ Переменные модели
 MODEL_ID = "meta-llama/Llama-2-7b-chat-hf"
 
-# Force CPU usage
+# ✅ Получение токена Hugging Face из переменной окружения
+HF_TOKEN = os.getenv("HUGGINGFACE_TOKEN")
+
+if not HF_TOKEN:
+    logging.error("❌ HUGGINGFACE_TOKEN is not set! Please provide a valid Hugging Face API token.")
+    exit(1)
+
+# ✅ Авторизация в Hugging Face
+logging.info("🔑 Logging into Hugging Face...")
+login(HF_TOKEN)
+
+# ✅ Принудительное использование CPU
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
 device = torch.device("cpu")
 
-# Load tokenizer
-logging.info("⏳ Loading tokenizer...")
-tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+# ✅ Загрузка токенизатора
+try:
+    logging.info("⏳ Loading tokenizer...")
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, use_auth_token=HF_TOKEN)
+except Exception as e:
+    logging.error(f"🔥 Failed to load tokenizer: {e}")
+    exit(1)
 
-# Load model with 4-bit quantization
+# ✅ Загрузка модели с 4-битной квантованием
 try:
     logging.info("⏳ Loading model with 4-bit quantization on CPU...")
 
@@ -34,7 +50,8 @@ try:
     model = AutoModelForCausalLM.from_pretrained(
         MODEL_ID,
         quantization_config=quantization_config,
-        device_map={"": device}
+        device_map={"": device},
+        use_auth_token=HF_TOKEN  # Передаем токен для доступа к закрытой модели
     )
 
     logging.info(f"✅ Successfully loaded model on {device}: {MODEL_ID}")
@@ -42,7 +59,7 @@ except Exception as e:
     logging.error(f"🔥 Failed to load model: {e}")
     exit(1)
 
-# Define text generation function
+# ✅ Функция генерации текста
 def generate_text(prompt):
     logging.info(f"📝 Received prompt: {prompt}")
 
@@ -68,7 +85,7 @@ def generate_text(prompt):
         logging.error(f"❌ Error in text generation: {e}")
         return "Error processing your request."
 
-# Gradio UI
+# ✅ Gradio UI
 ui = gr.Interface(
     fn=generate_text,
     inputs=gr.Textbox(placeholder="Type your message...", lines=2, label="💬 Enter your prompt"),
@@ -77,7 +94,7 @@ ui = gr.Interface(
     description="🚀 A chatbot powered by Llama 2 (7B) with 4-bit quantization.",
 )
 
-# Start Gradio UI and keep the app running
+# ✅ Запуск Gradio UI и поддержка активности контейнера
 try:
     if __name__ == "__main__":
         logging.info("🚀 Starting UI on port 7860...")
