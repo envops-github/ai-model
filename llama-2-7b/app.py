@@ -40,6 +40,11 @@ torch.cuda.ipc_collect()
 try:
     logging.info("⏳ Loading tokenizer...")
     tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, token=HF_TOKEN)
+    
+    # ✅ Фикс отсутствующего PAD-токена
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+        logging.info("✅ Assigned eos_token as pad_token to tokenizer.")
 except Exception as e:
     logging.error(f"🔥 Failed to load tokenizer: {e}")
     exit(1)
@@ -76,8 +81,14 @@ def generate_text(prompt):
         system_instruction = "You are an AI assistant. Answer questions concisely and informatively.\n"
         full_prompt = system_instruction + prompt
 
-        inputs = tokenizer(full_prompt, return_tensors="pt", truncation=True, padding=True).to(device)
-        
+        inputs = tokenizer(
+            full_prompt, 
+            return_tensors="pt", 
+            truncation=True, 
+            padding=True,  # ✅ Теперь работает!
+            max_length=512  # ✅ Фикс максимальной длины
+        ).to(device)
+
         outputs = model.generate(
             **inputs,
             max_length=200,
@@ -86,7 +97,7 @@ def generate_text(prompt):
             top_k=50,
             top_p=0.9
         )
-        
+
         response = tokenizer.decode(outputs[0], skip_special_tokens=True)
         logging.info(f"🤖 AI Response: {response}")
         return response
@@ -99,8 +110,8 @@ ui = gr.Interface(
     fn=generate_text,
     inputs=gr.Textbox(placeholder="Type your message...", lines=2, label="💬 Enter your prompt"),
     outputs=gr.Textbox(label="🤖 Llama 2 Response"),
-    title="🌌 Llama 2 AI Chatbot",
-    description="🚀 A chatbot powered by Llama 2 (7B) with 4-bit quantization on GPU.",
+    title="🌌 EnvOps AI Chatbot ",
+    description="🚀 A chatbot powered by Llama 2 (7B) with 4-bit quantization on GPU by EnvOps.",
 )
 
 # ✅ Запуск Gradio UI
