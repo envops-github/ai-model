@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 # ✅ Переменные модели
 MODEL_ID = "meta-llama/Llama-2-7b-chat-hf"
 OUTPUT_DIR = "./llama2-finetuned"
-HF_REPO = "username/llama2-finetuned"  # ЗАМЕНИ НА СВОЙ РЕПОЗИТОРИЙ!
+HF_REPO = "username/llama2-finetuned"  # НАДО ПОМЕНЯТЬ НА СВОЮ РЕПУ!
 
 # ✅ Получение токена Hugging Face
 HF_TOKEN = os.getenv("HUGGINGFACE_TOKEN")
